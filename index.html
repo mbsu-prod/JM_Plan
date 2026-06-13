@@ -543,6 +543,7 @@ function updateHero(ev, surplus){
   const totalDebt=card+kb+loan;
   let title, sub, orig, cur, interest, months, freed, barColor='#378ADD';
   let paidLabel='상환', remainLabel='잔액', statLabel1='완납까지', statLabel3='완납 후 매달';
+  let invertPct=true; // true=빚(줄수록 100%), false=적립(늘수록 100%)
 
   if(card>0){
     title='카드 할부 마무리 중';
@@ -568,7 +569,7 @@ function updateHero(ev, surplus){
     title='비상금 적립 중';
     sub='빚 없음! 이제 안전망 500만원을 만들어요.';
     orig=500; cur=emg; interest=0;
-    barColor='#1D9E75';
+    barColor='#1D9E75'; invertPct=false;
     paidLabel='적립'; remainLabel='남은 목표';
     statLabel1='완성까지'; statLabel3='목표까지';
     months=surplus>0?'약 '+Math.ceil((500-emg)/surplus)+'개월':'—';
@@ -580,21 +581,21 @@ function updateHero(ev, surplus){
     title='1억을 향해';
     sub='빚도 없고 비상금도 완성! 이제 자산을 불려요.';
     orig=goal; cur=totalAsset; interest=0;
-    barColor='#9B6DFF';
+    barColor='#9B6DFF'; invertPct=false;
     paidLabel='현재 자산'; remainLabel='목표까지';
     statLabel1='목표까지'; statLabel3='매달 투자';
     months=surplus>0?'약 '+Math.ceil((goal-totalAsset)/surplus)+'개월':'—';
     freed=surplus+'만원';
   }
 
-  const pct=orig>0?Math.min(100,Math.round(cur/orig*100)):100;
-  const paid=cur; // "쌓은" 양
+  const pct=orig>0?Math.min(100,Math.round(invertPct?(orig-cur)/orig*100:cur/orig*100)):100;
+  const paid=invertPct?(orig-cur):cur;
 
   document.getElementById('hero-title').textContent=title;
   document.getElementById('hero-sub').textContent=sub;
   document.getElementById('hero-bar').style.width=pct+'%';
   document.getElementById('hero-bar').style.background=barColor;
-  document.getElementById('hero-paid').textContent=paid+'만원 '+paidLabel;
+  document.getElementById('hero-paid').textContent=Math.max(0,paid)+'만원 '+paidLabel;
   document.getElementById('hero-pct').textContent=pct+'%';
   if(totalDebt>0){
     document.getElementById('hero-remain').textContent='잔액 '+cur+'만원';

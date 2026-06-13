@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>재민 자산 계획</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#1a1a1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="자산 계획">
+<link rel="apple-touch-icon" href="./icon.svg">
+<style>
+:root{color-scheme:light}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f3;color:#1a1a1a;padding:1.5rem;font-size:15px;line-height:1.5}
+h1{font-size:18px;font-weight:500;margin-bottom:4px}
+.subtitle{font-size:13px;color:#888;margin-bottom:1.5rem}
+.section-label{font-size:11px;font-weight:500;color:#999;letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px}
+.card{background:#fff;border:0.5px solid rgba(0,0,0,0.1);border-radius:12px;padding:1.25rem;margin-bottom:1rem}
+
+/* HERO */
+.hero{background:#1a1a1a;color:#fff;border-radius:16px;padding:1.5rem;margin-bottom:1rem}
+.hero-tag{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:#888;margin-bottom:8px}
+.hero-title{font-size:22px;font-weight:500;margin-bottom:4px}
+.hero-sub{font-size:13px;color:#888;margin-bottom:20px}
+.hero-bar-wrap{background:rgba(255,255,255,0.1);border-radius:6px;height:10px;overflow:hidden;margin-bottom:8px}
+.hero-bar{height:100%;border-radius:6px;background:#378ADD;transition:width .6s ease}
+.hero-bar-labels{display:flex;justify-content:space-between;font-size:12px;color:#666;margin-bottom:20px}
+.hero-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.hero-stat{background:rgba(255,255,255,0.06);border-radius:8px;padding:.75rem}
+.hero-stat-label{font-size:11px;color:#666;margin-bottom:4px}
+.hero-stat-val{font-size:16px;font-weight:500;color:#fff}
+.hero-stat-val.warn{color:#E8856A}
+
+/* JOURNEY */
+.journey{display:flex;align-items:flex-start;gap:0;margin-bottom:1rem;overflow-x:auto;padding-bottom:4px}
+.journey-step{flex:1;min-width:80px;text-align:center;position:relative}
+.journey-step:not(:last-child)::after{content:'';position:absolute;top:16px;left:50%;width:100%;height:2px;background:#e8e8e8;z-index:0}
+.journey-step.done::after{background:#1D9E75}
+.journey-step.active::after{background:linear-gradient(90deg,#1D9E75 0%,#e8e8e8 100%)}
+.step-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;position:relative;z-index:1;font-size:13px;font-weight:500;border:2px solid #e8e8e8;background:#f5f5f3;color:#bbb}
+.journey-step.done .step-dot{background:#1D9E75;border-color:#1D9E75;color:#fff}
+.journey-step.active .step-dot{background:#378ADD;border-color:#378ADD;color:#fff}
+.journey-step.next .step-dot{border-color:#378ADD;color:#378ADD;background:#fff}
+.step-label{font-size:11px;color:#888;line-height:1.3}
+.journey-step.active .step-label{color:#378ADD;font-weight:500}
+.journey-step.done .step-label{color:#1D9E75}
+.step-date{font-size:10px;color:#bbb;margin-top:2px}
+
+/* D-DAY */
+.dday-row{display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap}
+.dday-chip{flex:1;min-width:100px;background:#fff;border:0.5px solid rgba(0,0,0,0.1);border-radius:12px;padding:.875rem 1rem;text-align:center}
+.dday-label{font-size:11px;color:#888;margin-bottom:4px}
+.dday-val{font-size:22px;font-weight:500;line-height:1}
+.dday-sub{font-size:11px;color:#aaa;margin-top:4px}
+
+/* ASSETS */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+@media(max-width:480px){.two-col{grid-template-columns:1fr}}
+.asset-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:0.5px solid rgba(0,0,0,0.06);gap:8px}
+.asset-row:last-child{border-bottom:none}
+.row-info{flex:1}
+.row-label{font-size:14px;color:#555}
+.row-sub{font-size:11px;color:#aaa;margin-top:2px}
+.badge{display:inline-block;font-size:10px;padding:2px 6px;border-radius:4px;margin-left:5px;vertical-align:middle}
+.badge-warn{background:#FAEEDA;color:#854F0B}
+.badge-ok{background:#EAF3DE;color:#3B6D11}
+.neg{color:#E24B4A}
+.pos{color:#1D9E75}
+.edit-wrap{display:flex;align-items:center;gap:4px}
+.edit-input{border:none;border-bottom:1.5px dashed #ddd;background:transparent;font-weight:500;font-size:14px;color:#1a1a1a;width:70px;text-align:right;padding:2px 0;cursor:pointer;transition:border-color .2s}
+.edit-input:hover{border-bottom-color:#888}
+.edit-input:focus{outline:none;border-bottom-color:#378ADD;border-bottom-style:solid}
+.edit-unit{font-size:13px;color:#888}
+.networth-box{background:#f5f5f3;border-radius:8px;padding:1rem;display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+.nw-label{font-size:12px;color:#888;margin-bottom:4px}
+.nw-val{font-size:22px;font-weight:500}
+
+/* SLIDERS */
+.slider-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.slider-row:last-child{margin-bottom:0}
+.slider-name{font-size:13px;color:#888;min-width:72px;line-height:1.3}
+.slider-name small{display:block;font-size:10px;color:#bbb}
+.slider-val{font-size:13px;font-weight:500;min-width:58px;text-align:right}
+input[type=range]{flex:1;height:4px;accent-color:#378ADD}
+
+/* PROJECTION */
+.legend{display:flex;gap:14px;margin-bottom:10px;font-size:12px;color:#888;flex-wrap:wrap}
+.legend-dot{width:10px;height:10px;border-radius:2px;margin-right:4px;display:inline-block;vertical-align:middle}
+.note{font-size:12px;color:#aaa;margin-top:10px;padding-top:10px;border-top:0.5px solid rgba(0,0,0,0.06)}
+
+/* LOG */
+.log-controls{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.log-controls input{border:0.5px solid rgba(0,0,0,0.15);border-radius:8px;padding:6px 10px;font-size:13px;background:#fff;color:#1a1a1a;min-width:0}
+.log-controls input[type=month]{flex:1}
+.log-controls input[type=number]{width:100px}
+.log-controls input:focus{outline:none;border-color:#378ADD}
+.log-add-btn{background:#378ADD;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer}
+.log-add-btn:hover{background:#2a70c0}
+.log-table{width:100%;font-size:13px;border-collapse:collapse}
+.log-table th{font-weight:500;color:#888;text-align:left;padding:6px 0;border-bottom:0.5px solid rgba(0,0,0,0.08);font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+.log-table td{padding:7px 0;border-bottom:0.5px solid rgba(0,0,0,0.05);color:#333}
+.log-del{background:none;border:none;color:#ddd;cursor:pointer;font-size:16px;line-height:1;padding:0 2px}
+.log-del:hover{color:#E24B4A}
+.log-empty{text-align:center;color:#bbb;padding:1.5rem 0;font-size:13px}
+.edit-hint{font-size:10px;color:#bbb;margin-bottom:10px}
+.sync-bar{display:flex;justify-content:space-between;align-items:center;background:#fff;border:0.5px solid rgba(0,0,0,0.1);border-radius:10px;padding:.625rem 1rem;margin-bottom:1rem;gap:10px}
+.sync-status{font-size:12px;color:#888;flex:1}
+.auth-btn{background:#378ADD;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.auth-btn.out{background:#e8e8e8;color:#555}
+</style>
+</head>
+<body>
+<h1>재민님 자산 계획</h1>
+<div class="subtitle">25세 → 30세 1억 목표</div>
+
+<div class="sync-bar">
+  <span class="sync-status" id="sync-status">로그인하면 맥·폰 자동 동기화돼요</span>
+  <button class="auth-btn" id="auth-btn" onclick="handleAuth()">Google로 로그인</button>
+</div>
+
+<!-- HERO: Current Focus -->
+<div class="hero">
+  <div class="hero-tag" id="hero-tag">지금 집중할 것</div>
+  <div class="hero-title" id="hero-title">카드 할부 마무리 중</div>
+  <div class="hero-sub" id="hero-sub">이게 끝나면 본격 시작이에요</div>
+  <div class="hero-bar-wrap"><div class="hero-bar" id="hero-bar" style="width:0%"></div></div>
+  <div class="hero-bar-labels">
+    <span id="hero-paid">0만원 상환</span>
+    <span id="hero-pct">0%</span>
+    <span id="hero-remain">잔액 —</span>
+  </div>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-label">완납까지</div>
+      <div class="hero-stat-val" id="hero-months">—</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-label">이번달 이자</div>
+      <div class="hero-stat-val warn" id="hero-interest">—</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-label">완납 후 매달</div>
+      <div class="hero-stat-val" id="hero-freed">+57만원</div>
+    </div>
+  </div>
+</div>
+
+<!-- THIS MONTH MISSION -->
+<div class="card" style="border-color:rgba(55,138,221,0.25);background:#F7FBFF">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+    <div class="section-label" style="margin-bottom:0;color:#378ADD">이번 달 미션</div>
+    <div style="font-size:11px;color:#aaa" id="mission-month"></div>
+  </div>
+  <div style="font-size:19px;font-weight:500;color:#1a1a1a;margin-bottom:6px" id="mission-title">—</div>
+  <div style="font-size:13px;color:#666;margin-bottom:12px" id="mission-desc">—</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div style="background:rgba(55,138,221,0.08);border-radius:8px;padding:.625rem .75rem">
+      <div style="font-size:10px;color:#888;margin-bottom:3px">지출 목표</div>
+      <div style="font-size:14px;font-weight:500;color:#378ADD" id="mission-spend-target">—</div>
+    </div>
+    <div style="background:rgba(55,138,221,0.08);border-radius:8px;padding:.625rem .75rem">
+      <div style="font-size:10px;color:#888;margin-bottom:3px">다음 단계까지</div>
+      <div style="font-size:14px;font-weight:500;color:#378ADD" id="mission-next">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- JOURNEY -->
+<div class="card" style="padding:1.25rem 1.25rem 1rem">
+  <div class="section-label" style="margin-bottom:16px">상환 여정</div>
+  <div class="journey" id="journey-steps">
+    <div class="journey-step" id="step-card">
+      <div class="step-dot">1</div>
+      <div class="step-label">카드 할부</div>
+      <div class="step-date" id="step-card-date">85만원</div>
+    </div>
+    <div class="journey-step" id="step-kb">
+      <div class="step-dot">2</div>
+      <div class="step-label">케이뱅크</div>
+      <div class="step-date" id="step-kb-date">300만원</div>
+    </div>
+    <div class="journey-step" id="step-loan">
+      <div class="step-dot">3</div>
+      <div class="step-label">학자금</div>
+      <div class="step-date" id="step-loan-date">200만원</div>
+    </div>
+    <div class="journey-step" id="step-free">
+      <div class="step-dot">🎉</div>
+      <div class="step-label">빚 탈출</div>
+      <div class="step-date" id="step-free-date">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- D-DAY -->
+<div class="dday-row">
+  <div class="dday-chip">
+    <div class="dday-label">빚 탈출까지</div>
+    <div class="dday-val" id="dd-debt" style="color:#378ADD">D-?</div>
+    <div class="dday-sub" id="dd-debt-sub">계산 중</div>
+  </div>
+  <div class="dday-chip">
+    <div class="dday-label">비상금 완성까지</div>
+    <div class="dday-val" id="dd-emg" style="color:#888">D-?</div>
+    <div class="dday-sub" id="dd-emg-sub">계산 중</div>
+  </div>
+  <div class="dday-chip">
+    <div class="dday-label">30살까지</div>
+    <div class="dday-val" id="dd-30" style="color:#bbb">D-?</div>
+    <div class="dday-sub">2031년 6월</div>
+  </div>
+</div>
+
+<!-- EMERGENCY FUND -->
+<div class="card" id="emg-card" style="display:none">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+    <div>
+      <div class="section-label" style="margin-bottom:4px">비상금 적립</div>
+      <div style="font-size:13px;color:#555">빚 탈출 후 다음 목표예요</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:11px;color:#aaa;margin-bottom:2px">목표</div>
+      <div style="font-size:16px;font-weight:500;color:#378ADD">500만원</div>
+    </div>
+  </div>
+  <div style="background:#f5f5f3;border-radius:6px;height:10px;overflow:hidden;margin-bottom:8px">
+    <div id="emg-bar" style="height:100%;border-radius:6px;background:#1D9E75;width:0%;transition:width .6s ease"></div>
+  </div>
+  <div style="display:flex;justify-content:space-between;font-size:12px;color:#888;margin-bottom:14px">
+    <span id="emg-saved">0만원 적립</span>
+    <span id="emg-pct">0%</span>
+    <span id="emg-left">500만원 남음</span>
+  </div>
+  <div style="background:#f5f5f3;border-radius:8px;padding:.75rem;font-size:13px;color:#666">
+    비상금이 있으면 예상치 못한 지출에도 <strong>새로운 빚</strong>이 생기지 않아요.
+  </div>
+</div>
+
+<!-- ASSETS & LIABILITIES -->
+<div class="two-col">
+  <div class="card">
+    <div class="section-label">자산</div>
+    <div class="edit-hint">숫자 클릭해서 수정</div>
+    <div class="asset-row">
+      <div class="row-info">
+        <div class="row-label">주식 (SOUX)</div>
+        <div class="row-sub">55주 · 자동 업데이트</div>
+      </div>
+      <div class="edit-wrap">
+        <input class="edit-input neg" type="number" id="e-stock" value="114" min="0" max="99999">
+        <span class="edit-unit">만원</span>
+      </div>
+    </div>
+    <div class="asset-row">
+      <div class="row-info"><div class="row-label">현금 잔고</div></div>
+      <div class="edit-wrap">
+        <input class="edit-input" type="number" id="e-cash" value="32" min="0" max="99999">
+        <span class="edit-unit">만원</span>
+      </div>
+    </div>
+    <div class="asset-row">
+      <div class="row-label" style="font-weight:500">총 자산</div>
+      <div style="font-weight:500" id="total-asset">146만원</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="section-label">부채</div>
+    <div class="edit-hint">숫자 클릭해서 수정</div>
+    <div class="asset-row">
+      <div class="row-info">
+        <div class="row-label">카드 할부<span class="badge badge-warn">최우선</span></div>
+        <div class="row-sub">7월 60만 · 8월 25만</div>
+      </div>
+      <div class="edit-wrap">
+        <input class="edit-input neg" type="number" id="e-card" value="85" min="0" max="99999">
+        <span class="edit-unit">만원</span>
+      </div>
+    </div>
+    <div class="asset-row">
+      <div class="row-info">
+        <div class="row-label">케이뱅크<span class="badge badge-warn">2순위</span></div>
+        <div class="row-sub">연 10%</div>
+      </div>
+      <div class="edit-wrap">
+        <input class="edit-input neg" type="number" id="e-kb" value="300" min="0" max="99999">
+        <span class="edit-unit">만원</span>
+      </div>
+    </div>
+    <div class="asset-row">
+      <div class="row-info">
+        <div class="row-label">학자금<span class="badge badge-ok">3순위</span></div>
+        <div class="row-sub">무이자</div>
+      </div>
+      <div class="edit-wrap">
+        <input class="edit-input neg" type="number" id="e-loan" value="200" min="0" max="99999">
+        <span class="edit-unit">만원</span>
+      </div>
+    </div>
+    <div class="asset-row">
+      <div class="row-label" style="font-weight:500">총 부채</div>
+      <div style="font-weight:500" id="total-debt" class="neg">585만원</div>
+    </div>
+  </div>
+</div>
+<div class="card" style="margin-bottom:1rem">
+  <div class="networth-box">
+    <div><div class="nw-label">현재 순자산</div><div class="nw-val neg" id="cur-nw">-439만원</div></div>
+    <div style="text-align:right"><div class="nw-label">30살 목표</div><div class="nw-val" style="color:#378ADD">1억</div></div>
+  </div>
+</div>
+
+<!-- SLIDERS -->
+<div class="card">
+  <div class="section-label">내 상황 설정</div>
+  <div class="slider-row">
+    <span class="slider-name">월 수입</span>
+    <input type="range" id="s-income" min="150" max="500" step="10" value="200">
+    <span class="slider-val" id="v-income">200만원</span>
+  </div>
+  <div class="slider-row">
+    <span class="slider-name">추가 수입<small>부업 등</small></span>
+    <input type="range" id="s-extra" min="0" max="200" step="5" value="0">
+    <span class="slider-val" id="v-extra">0만원</span>
+  </div>
+  <div id="extra-impact" style="font-size:12px;color:#1D9E75;padding:0 0 4px 82px;min-height:18px"></div>
+  <div class="slider-row">
+    <span class="slider-name">월 고정비<small>월세·통신·교통</small></span>
+    <input type="range" id="s-fixed" min="50" max="200" step="5" value="85">
+    <span class="slider-val" id="v-fixed">85만원</span>
+  </div>
+  <div class="slider-row">
+    <span class="slider-name">식비/외식</span>
+    <input type="range" id="s-food" min="20" max="150" step="5" value="55">
+    <span class="slider-val" id="v-food">55만원</span>
+  </div>
+</div>
+
+<!-- PROJECTION CHART -->
+<div class="card">
+  <div class="legend">
+    <span><span class="legend-dot" style="background:#378ADD"></span>순자산 예측</span>
+    <span><span class="legend-dot" style="background:#D85A30;opacity:.7"></span>1억 목표</span>
+    <span><span class="legend-dot" style="background:#1D9E75;border-radius:50%"></span>실제 기록</span>
+  </div>
+  <div style="position:relative;height:240px">
+    <canvas id="projChart" role="img" aria-label="30세까지 순자산 성장 예측">순자산 성장 예측</canvas>
+  </div>
+  <div class="note">연 5% 수익률 가정 · 비상금(500만원) 확보 후 투자 시작</div>
+</div>
+
+<!-- MONTHLY LOG -->
+<div class="card">
+  <div class="section-label">월별 순자산 기록</div>
+  <div class="log-controls">
+    <input type="month" id="log-month" value="2026-07">
+    <input type="number" id="log-val" placeholder="순자산 (만원)" style="flex:1">
+    <button class="log-add-btn" onclick="addLogEntry()">+ 추가</button>
+  </div>
+  <div class="log-empty" id="log-empty">매달 실제 순자산을 기록해 계획과 비교해보세요.</div>
+  <table class="log-table" id="log-table" style="display:none">
+    <thead><tr><th>월</th><th>실제</th><th>계획</th><th>차이</th><th></th></tr></thead>
+    <tbody id="log-tbody"></tbody>
+  </table>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<script>
+function monthToLabel(m){const b=5+m;return"'"+String(2026+Math.floor(b/12)).slice(2)+'.'+(b%12+1)}
+function monthToFull(m){const b=5+m;return(2026+Math.floor(b/12))+'년 '+(b%12+1)+'월'}
+function ymToIndex(ym){const[y,mo]=ym.split('-').map(Number);return(y-2026)*12+(mo-6)}
+function calcDDay(mn){const n=new Date(),t=new Date(n.getFullYear(),n.getMonth()+mn,n.getDate());return Math.ceil((t-n)/86400000)}
+
+function simulate(inc,xtr,fix,food,ev){
+  const mo=inc+xtr,exp=fix+food,kbR=0.10/12,invR=0.05/12,emgT=500;
+  let card=ev.card,kb=ev.kb,loan=ev.loan,sav=ev.stock+ev.cash,emg=0;
+  let dfM=null,edM=null;
+  const arr=[Math.round(sav-card-kb-loan)];
+  for(let m=1;m<=60;m++){
+    kb*=(1+kbR);
+    const cp=m===1?Math.min(60,card):m===2?Math.min(25,card):0;
+    card=Math.max(0,card-cp);
+    let s=mo-exp-cp;
+    if(s<0){sav=Math.max(0,sav+s);s=0;}
+    if(kb>0&&s>0){const p=Math.min(kb,s);kb-=p;s-=p;}
+    if(loan>0&&s>0){const p=Math.min(loan,s);loan-=p;s-=p;}
+    const td=card+Math.max(0,kb)+Math.max(0,loan);
+    if(td<1&&!dfM)dfM=m;
+    if(td<1&&emg<emgT&&s>0){const c=Math.min(s,emgT-emg);emg+=c;s-=c;if(emg>=emgT&&!edM)edM=m;}
+    if(emg>=emgT)sav=sav*(1+invR)+s;
+    arr.push(Math.round(sav+emg-td));
+  }
+  return{arr,dfM,edM};
+}
+
+const ctx=document.getElementById('projChart').getContext('2d');
+const chart=new Chart(ctx,{
+  type:'line',
+  data:{
+    labels:Array.from({length:61},(_,i)=>monthToLabel(i)),
+    datasets:[
+      {label:'예측',data:[],borderColor:'#378ADD',borderWidth:2,pointRadius:0,tension:0.3,fill:true,backgroundColor:'rgba(55,138,221,0.07)'},
+      {label:'1억',data:Array(61).fill(10000),borderColor:'#D85A30',borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false},
+      {label:'실제',type:'scatter',data:[],pointRadius:6,pointBackgroundColor:'#1D9E75',borderColor:'#1D9E75'}
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': '+Math.round(c.raw.y??c.raw).toLocaleString()+'만원'}}},
+    scales:{
+      x:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'rgba(0,0,0,0.35)',font:{size:11},callback:(_,i)=>{if(i===0||i===60)return monthToLabel(i);if((5+i)%12===0)return monthToLabel(i);return '';}}},
+      y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'rgba(0,0,0,0.35)',font:{size:11},callback:v=>v>=10000?'1억':v>=1000?(v/1000).toFixed(1)+'천':Math.round(v)+'만'}}
+    }
+  }
+});
+
+let logEntries=[];
+let plannedArr=[];
+
+function saveLog(){
+  if(currentUser) saveToFirebase();
+  else localStorage.setItem('nw-log',JSON.stringify(logEntries));
+}
+function addLogEntry(){
+  const mo=document.getElementById('log-month').value;
+  const val=parseFloat(document.getElementById('log-val').value);
+  if(!mo||isNaN(val))return;
+  logEntries=logEntries.filter(e=>e.month!==mo);
+  logEntries.push({month:mo,value:val});
+  logEntries.sort((a,b)=>a.month.localeCompare(b.month));
+  saveLog();
+  document.getElementById('log-val').value='';
+  renderLog();updateChartActual();
+}
+function delLogEntry(mo){
+  logEntries=logEntries.filter(e=>e.month!==mo);
+  saveLog();
+  renderLog();updateChartActual();
+}
+function renderLog(){
+  const empty=document.getElementById('log-empty'),tbl=document.getElementById('log-table'),tb=document.getElementById('log-tbody');
+  if(!logEntries.length){empty.style.display='';tbl.style.display='none';return;}
+  empty.style.display='none';tbl.style.display='';
+  tb.innerHTML=logEntries.map(e=>{
+    const idx=ymToIndex(e.month),pl=plannedArr[idx];
+    const diff=typeof pl==='number'?e.value-pl:null;
+    const ds=diff!==null?`<span class="${diff>=0?'pos':'neg'}">${diff>=0?'+':''}${Math.round(diff)}만</span>`:'—';
+    return`<tr><td>${e.month.replace('-','년 ')}월</td><td><strong>${Math.round(e.value).toLocaleString()}만원</strong></td><td style="color:#888">${typeof pl==='number'?Math.round(pl).toLocaleString()+'만원':'—'}</td><td>${ds}</td><td><button class="log-del" onclick="delLogEntry('${e.month}')">×</button></td></tr>`;
+  }).join('');
+}
+function updateChartActual(){
+  chart.data.datasets[2].data=logEntries.map(e=>({x:ymToIndex(e.month),y:e.value}));
+  chart.update('none');
+}
+
+function updateMission(ev, surplus, dfM){
+  const now=new Date();
+  const yr=now.getFullYear(), mo=now.getMonth(); // 0-indexed month
+  const label=(yr)+'년 '+(mo+1)+'월';
+  document.getElementById('mission-month').textContent=label;
+
+  const spend=document.getElementById('s-fixed').value*1+document.getElementById('s-food').value*1;
+  let title,desc,spendTarget,nextStep;
+
+  if(ev.card>0){
+    title='할부값 내고 버티기';
+    desc='카드 할부가 자동으로 빠져나가요. 이번 달은 추가 지출만 조심하면 돼요.';
+    spendTarget=spend+'만원 이하';
+    nextStep=dfM?monthToFull(dfM)+'에 자유':'—';
+  } else if(ev.kb>0){
+    const pay=Math.min(ev.kb, surplus);
+    title='케이뱅크 '+pay+'만원 입금';
+    desc='월급 들어오면 바로 케이뱅크 앱 열고 '+pay+'만원 상환. 이자 '+Math.round(ev.kb*0.10/12)+'만원/월이 사라져요.';
+    spendTarget=spend+'만원 이하';
+    nextStep=dfM?monthToFull(dfM):'—';
+  } else if(ev.loan>0){
+    const pay=Math.min(ev.loan, surplus);
+    title='학자금 '+pay+'만원 입금';
+    desc='무이자라 여유 있지만, 갚을수록 순자산이 올라요.';
+    spendTarget=spend+'만원 이하';
+    nextStep=dfM?monthToFull(dfM):'—';
+  } else {
+    title='비상금 '+Math.min(500, surplus)+'만원 적립';
+    desc='빚 없음! 이제 비상금 계좌에 쌓기 시작해요.';
+    spendTarget=spend+'만원 이하';
+    nextStep='500만원 달성 후 투자 시작';
+  }
+
+  document.getElementById('mission-title').textContent=title;
+  document.getElementById('mission-desc').textContent=desc;
+  document.getElementById('mission-spend-target').textContent=spendTarget;
+  document.getElementById('mission-next').textContent=nextStep;
+}
+
+function updateExtraImpact(inc, fix, food, ev){
+  const xtr=+document.getElementById('s-extra').value;
+  const el=document.getElementById('extra-impact');
+  if(xtr===0){el.textContent='';return;}
+  const baseM=simulate(inc,0,fix,food,ev).dfM;
+  const withM=simulate(inc,xtr,fix,food,ev).dfM;
+  if(baseM&&withM){
+    const diff=baseM-withM;
+    el.textContent=diff>0?'→ 빚 탈출 '+diff+'개월 앞당겨져요':'→ 빚 탈출 시점 동일';
+  } else {
+    el.textContent='';
+  }
+}
+
+function updateHero(ev, surplus){
+  const card=ev.card, kb=ev.kb, loan=ev.loan;
+  let title, sub, orig, cur, interest, months, freed;
+
+  if(card>0){
+    title='카드 할부 마무리 중';
+    sub='2개월이면 끝나요. 그 다음이 진짜 시작이에요.';
+    orig=85; cur=card; interest=0;
+    months='약 2개월';
+    freed=surplus+'만원';
+  } else if(kb>0){
+    title='케이뱅크 ' + kb.toLocaleString() + '만원 상환 중';
+    sub='이자가 매달 빠져나가고 있어요. 빠를수록 이득이에요.';
+    orig=300; cur=kb;
+    interest=Math.round(kb*0.10/12*10)/10;
+    months=surplus>0?'약 '+Math.ceil(kb/surplus)+'개월':'—';
+    freed=surplus+'만원 + 이자 '+Math.round(kb*0.10/12)+'만원';
+  } else if(loan>0){
+    title='학자금 ' + loan.toLocaleString() + '만원 상환 중';
+    sub='무이자라 여유 있어요. 하지만 빚은 빚이에요.';
+    orig=200; cur=loan; interest=0;
+    months=surplus>0?'약 '+Math.ceil(loan/surplus)+'개월':'—';
+    freed=surplus+'만원';
+  } else {
+    title='빚 탈출 완료!';
+    sub='이제 모으기만 하면 돼요.';
+    orig=1; cur=0; interest=0; months='완료'; freed=surplus+'만원';
+  }
+
+  const pct=orig>0?Math.min(100,Math.round((orig-cur)/orig*100)):100;
+  const paid=orig-cur;
+
+  document.getElementById('hero-title').textContent=title;
+  document.getElementById('hero-sub').textContent=sub;
+  document.getElementById('hero-bar').style.width=pct+'%';
+  document.getElementById('hero-bar').style.background=pct>=100?'#1D9E75':'#378ADD';
+  document.getElementById('hero-paid').textContent=Math.max(0,paid)+'만원 상환';
+  document.getElementById('hero-pct').textContent=pct+'%';
+  document.getElementById('hero-remain').textContent='잔액 '+cur+'만원';
+  document.getElementById('hero-months').textContent=months;
+  document.getElementById('hero-interest').textContent=interest>0?'-'+interest+'만원/월':'없음';
+  document.getElementById('hero-freed').textContent='+'+freed;
+}
+
+function updateJourney(ev, dfM){
+  const steps=[
+    {id:'step-card',done:ev.card<=0,active:ev.card>0,val:ev.card,orig:'85만원'},
+    {id:'step-kb',  done:ev.kb<=0&&ev.card<=0,active:ev.card<=0&&ev.kb>0,val:ev.kb,orig:'300만원'},
+    {id:'step-loan',done:ev.loan<=0&&ev.kb<=0&&ev.card<=0,active:ev.card<=0&&ev.kb<=0&&ev.loan>0,val:ev.loan,orig:'200만원'},
+    {id:'step-free',done:false,active:false}
+  ];
+  steps.forEach((s,i)=>{
+    const el=document.getElementById(s.id);
+    el.className='journey-step'+(s.done?' done':s.active?' active':i===1&&ev.card>0?' next':'');
+  });
+  document.getElementById('step-card-date').textContent=ev.card<=0?'완납!':ev.card+'만원';
+  document.getElementById('step-kb-date').textContent=ev.kb<=0&&ev.card<=0?'완납!':ev.kb+'만원';
+  document.getElementById('step-loan-date').textContent=ev.loan<=0&&ev.kb<=0&&ev.card<=0?'완납!':ev.loan+'만원';
+  document.getElementById('step-free-date').textContent=dfM?monthToFull(dfM):'—';
+}
+
+function getEV(){
+  return{
+    stock:Math.max(0,+document.getElementById('e-stock').value||0),
+    cash: Math.max(0,+document.getElementById('e-cash').value||0),
+    card: Math.max(0,+document.getElementById('e-card').value||0),
+    kb:   Math.max(0,+document.getElementById('e-kb').value||0),
+    loan: Math.max(0,+document.getElementById('e-loan').value||0)
+  };
+}
+
+function update(){
+  const inc=+document.getElementById('s-income').value;
+  const xtr=+document.getElementById('s-extra').value;
+  const fix=+document.getElementById('s-fixed').value;
+  const food=+document.getElementById('s-food').value;
+  const ev=getEV();
+
+  ['income','extra','fixed','food'].forEach(k=>document.getElementById('v-'+k).textContent=+document.getElementById('s-'+k).value+'만원');
+
+  const ta=ev.stock+ev.cash,td=ev.card+ev.kb+ev.loan,nw=ta-td;
+  document.getElementById('total-asset').textContent=ta+'만원';
+  document.getElementById('total-debt').textContent=td+'만원';
+  const nwEl=document.getElementById('cur-nw');
+  nwEl.textContent=nw.toLocaleString()+'만원';
+  nwEl.className='nw-val '+(nw>=0?'pos':'neg');
+
+  const surplus=inc+xtr-fix-food;
+  updateHero(ev,surplus);
+
+  const{arr,dfM,edM}=simulate(inc,xtr,fix,food,ev);
+  updateMission(ev,surplus,dfM);
+  updateExtraImpact(inc,fix,food,ev);
+  plannedArr=arr;
+  renderLog();updateChartActual();
+
+  updateJourney(ev,dfM);
+
+  if(dfM){
+    const dd=calcDDay(dfM);
+    document.getElementById('dd-debt').textContent=(dd>0?'D-':'D+')+Math.abs(dd);
+    document.getElementById('dd-debt').style.color=dd<=90?'#1D9E75':'#378ADD';
+    document.getElementById('dd-debt-sub').textContent=monthToFull(dfM);
+  } else {
+    document.getElementById('dd-debt').textContent='—';
+    document.getElementById('dd-debt-sub').textContent='달성 불가';
+  }
+  if(edM){
+    const dd=calcDDay(edM);
+    document.getElementById('dd-emg').textContent=(dd>0?'D-':'D+')+Math.abs(dd);
+    document.getElementById('dd-emg').style.color='#1D9E75';
+    document.getElementById('dd-emg-sub').textContent=monthToFull(edM);
+  }
+  document.getElementById('dd-30').textContent='D-'+Math.max(0,calcDDay(60));
+
+  // 비상금 카드 — 빚 탈출 후에만 표시, 그 전엔 숨김
+  const totalDebt=ev.card+ev.kb+ev.loan;
+  const emgCard=document.getElementById('emg-card');
+  if(totalDebt<=0){
+    emgCard.style.display='';
+    const pctEmg=edM?0:100;
+    document.getElementById('emg-bar').style.width=pctEmg+'%';
+    document.getElementById('emg-saved').textContent=(pctEmg===100?'500':'0')+'만원 적립';
+    document.getElementById('emg-pct').textContent=pctEmg+'%';
+    document.getElementById('emg-left').textContent=pctEmg===100?'완성! 🎉':'500만원 남음';
+  } else {
+    emgCard.style.display='none';
+  }
+
+  chart.data.datasets[0].data=arr;
+  chart.update('none');
+}
+
+// ── Firebase 초기화 ──────────────────────────────────────────
+firebase.initializeApp({
+  apiKey:"AIzaSyBz5D9-FO3y8AbcEkGM-cTEyvI0gmFbnjE",
+  authDomain:"jm-plan.firebaseapp.com",
+  databaseURL:"https://jm-plan-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"jm-plan",
+  storageBucket:"jm-plan.firebasestorage.app",
+  messagingSenderId:"247096004405",
+  appId:"1:247096004405:web:d970ec8b59273ea8bbc67c"
+});
+const auth=firebase.auth();
+const db=firebase.database();
+
+// ── 저장 키 ─────────────────────────────────────────────────
+const SAVE_KEYS=['s-income','s-extra','s-fixed','s-food','e-stock','e-cash','e-card','e-kb','e-loan'];
+let currentUser=null;
+let saveTimer=null;
+let fbListener=null;
+
+// ── 로컬 저장/불러오기 ────────────────────────────────────────
+function saveLocal(){
+  const obj={};
+  SAVE_KEYS.forEach(k=>{const el=document.getElementById(k);if(el)obj[k]=el.value;});
+  localStorage.setItem('asset-plan-values',JSON.stringify(obj));
+  localStorage.setItem('nw-log',JSON.stringify(logEntries));
+}
+function loadLocal(){
+  try{
+    const saved=JSON.parse(localStorage.getItem('asset-plan-values')||'{}');
+    SAVE_KEYS.forEach(k=>{const el=document.getElementById(k);if(el&&saved[k]!=null)el.value=saved[k];});
+    logEntries=JSON.parse(localStorage.getItem('nw-log')||'[]');
+  }catch(e){}
+}
+
+// ── Firebase 저장 (디바운스 500ms) ───────────────────────────
+function saveToFirebase(){
+  if(!currentUser)return;
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{
+    const settings={};
+    SAVE_KEYS.forEach(k=>{const el=document.getElementById(k);if(el)settings[k]=el.value;});
+    db.ref('users/'+currentUser.uid+'/data').set({settings,log:logEntries||[]});
+  },500);
+}
+
+// ── 데이터 UI 적용 ────────────────────────────────────────────
+function applyData(data){
+  if(data.settings) SAVE_KEYS.forEach(k=>{const el=document.getElementById(k);if(el&&data.settings[k]!=null)el.value=data.settings[k];});
+  if(data.log) logEntries=Array.isArray(data.log)?data.log:Object.values(data.log||{});
+  logEntries.sort((a,b)=>a.month.localeCompare(b.month));
+  update();
+}
+
+// ── 동기화 상태 UI ────────────────────────────────────────────
+function setSyncUI(user){
+  const btn=document.getElementById('auth-btn');
+  const st=document.getElementById('sync-status');
+  if(user){
+    btn.textContent='로그아웃';
+    btn.className='auth-btn out';
+    st.innerHTML='<span style="color:#1D9E75">●</span> '+user.displayName+' · 동기화 중';
+  } else {
+    btn.textContent='Google로 로그인';
+    btn.className='auth-btn';
+    st.textContent='로그인하면 맥·폰 자동 동기화돼요';
+  }
+}
+
+// ── Google 로그인/로그아웃 ────────────────────────────────────
+function handleAuth(){
+  if(currentUser){
+    if(fbListener){db.ref('users/'+currentUser.uid+'/data').off('value',fbListener);fbListener=null;}
+    auth.signOut();
+  } else {
+    auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>alert('로그인 실패: '+e.message));
+  }
+}
+
+// ── 인증 상태 감지 ────────────────────────────────────────────
+auth.onAuthStateChanged(user=>{
+  currentUser=user;
+  setSyncUI(user);
+  if(user){
+    // 기존 리스너 제거
+    if(fbListener){db.ref('users/'+user.uid+'/data').off('value',fbListener);fbListener=null;}
+    // 실시간 리스너 등록
+    fbListener=db.ref('users/'+user.uid+'/data').on('value',snap=>{
+      const data=snap.val();
+      if(data) applyData(data);
+    });
+  } else {
+    loadLocal();
+    update();
+  }
+});
+
+// ── 값 변경 시 저장 ───────────────────────────────────────────
+function updateAndSave(){
+  update();
+  if(currentUser) saveToFirebase();
+  else saveLocal();
+}
+
+['s-income','s-extra','s-fixed','s-food'].forEach(id=>document.getElementById(id).addEventListener('input',updateAndSave));
+['e-stock','e-cash','e-card','e-kb','e-loan'].forEach(id=>document.getElementById(id).addEventListener('input',updateAndSave));
+
+// ── 초기 로드 (Firebase 인증 전 로컬로 먼저) ─────────────────
+loadLocal();
+update();
+
+// ── 서비스 워커 (PWA 오프라인) ───────────────────────────────
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
